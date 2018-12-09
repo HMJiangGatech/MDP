@@ -20,6 +20,7 @@ class RandomAgent(Agent):
         self.num_act = num_act
 
     def act(self, s):
+        return 1
         return random.randint(0,self.num_act-1)
 
     def observe(self, s_old, a, r, s_new):
@@ -27,7 +28,6 @@ class RandomAgent(Agent):
 
     def reset(self):
         pass
-
 
 class UCB1(Agent):
     def __init__(self, num_act, c=0.2):
@@ -50,10 +50,7 @@ class UCB1(Agent):
         self.t += 1
 
     def reset(self):
-        self.mu *= 0
-        self.T *= 0
-        self.t = 0
-
+        pass
 
 class Greedy(Agent):
     def __init__(self, num_act, eps=1.0, decay_steps = 10):
@@ -81,6 +78,34 @@ class Greedy(Agent):
         self.t += 1
 
     def reset(self):
-        self.mu *= 0
-        self.T *= 0
+        pass
+
+class QLearning(Agent):
+    """
+    Tabula Q Learning Agent:
+    gamma, discount reward coefficient
+    """
+    def __init__(self, num_state, num_act, lr=0.1, eps=1.0, decay_steps = 10, gamma = 0.95):
+        self.num_act = num_act
+        self.Q = np.zeros((num_state,num_act))
+        self.eps = eps
+        self.decay_steps = max(decay_steps, self.num_act*2)
+        self.lr = lr
+        self.gamma = gamma
         self.t = 0
+
+    def act(self, s):
+        eps = self.eps * (self.decay_steps-self.t)/self.decay_steps
+        if random.uniform(0,1) < eps:
+            return random.randint(0,self.num_act-1)
+        else:
+            return self.Q[s,:].argmax()
+
+
+    def observe(self, s_old, a, r, s_new):
+        self.Q[s_old,a] = (1-self.lr)*self.Q[s_old,a] + self.lr*(r+self.gamma*self.Q[s_new,:].max())
+        self.t += 1
+
+
+    def reset(self):
+        pass

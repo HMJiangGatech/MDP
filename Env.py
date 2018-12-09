@@ -19,11 +19,11 @@ class MDP(Environment):
             self.trans_mat = np.zeros((self.num_state,self.num_act,self.num_state))
             for i in range(self.num_state):
                 for j in range(self.num_act):
-                    self.trans_mat[i,j,:] = np.random.dirichlet([5]*self.num_state)
+                    self.trans_mat[i,j,:] = np.random.dirichlet(np.random.uniform(size=self.num_state)*0.8+0.2)
         else:
             self.trans_mat = trans_mat
         if reward_coef is None:
-            self.reward_coef = np.random.normal(1,1,(self.num_state,self.num_state))
+            self.reward_coef = np.random.normal(1,10,(self.num_state,self.num_state))
         else:
             self.reward_coef = reward_coef
 
@@ -38,6 +38,7 @@ class MDP(Environment):
 
     def reset(self):
         self.curr_state = random.randint(0,self.num_state-1)
+        return self.curr_state
 
 class MAB(Environment):
     """
@@ -54,9 +55,10 @@ class MAB(Environment):
             else:
                 self.prob = prob
         self.num_act = self.num_arm
+        self.num_state = 1
 
     def step(self,action):
-        return None, 1 if random.uniform(0,1) <= self.prob[action] else 0
+        return 0, 1 if random.uniform(0,1) <= self.prob[action] else 0
 
     def reset(self):
-        return None
+        return 0

@@ -13,9 +13,13 @@ parser.add_argument('--max_step', default=400, type=int, help='maximun number of
 parser.add_argument('-A', '--Agent', default='RandomAgent', type=str)
 ###UBC1 Agent
 parser.add_argument('--ucb1_c', default=0.2, type=float, help='tuning parameter of UCB1 agent')
-###Greedy Agent
-parser.add_argument('--greedy_eps', default=1.0, type=float, help='explore probability of Greedy agent')
-parser.add_argument('--greedy_decay', default=350, type=int, help='decay steps of Greedy agent')
+###Epsilon Greedy Search
+parser.add_argument('--greedy_eps', default=1.0, type=float, help='explore probability of Epsilon Greedy Search')
+parser.add_argument('--greedy_decay', default=350, type=int, help='decay steps of Epsilon Greedy Search')
+###Discount Factor of Reward
+parser.add_argument('--gamma', default=0.95, type=float, help='Discount Factor of Reward')
+###Learning rate
+parser.add_argument('--lr', default=0.1, type=float, help='Learning rate of Q-Learning')
 
 import Env
 import Agent
@@ -49,6 +53,8 @@ def buildenv(args):
         agent = Agent.UCB1(env.num_act, args.ucb1_c)
     elif args.Agent == "Greedy":
         agent = Agent.Greedy(env.num_act, args.greedy_eps, args.greedy_decay)
+    elif args.Agent == "QLearning":
+        agent = Agent.QLearning(env.num_state, env.num_act, lr = args.lr, eps = args.greedy_eps, decay_steps = args.greedy_decay, gamma = args.gamma)
     return env, agent
 
 
@@ -64,10 +70,10 @@ def main(args):
             action = agent.act(state)
             new_state, reward = env.step(action)
             episode_reward += reward
-            all_rewards += [episode_reward]
             agent.observe(state, action, reward, new_state)
             state = new_state
         all_reward += episode_reward
+        all_rewards += [episode_reward]
     print("Total Reward: \t", all_reward)
     plt.plot(all_rewards)
     plt.show()
