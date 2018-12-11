@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import math
+import torch
 
 class Agent:
     def __init__(self):
@@ -12,8 +13,8 @@ class Agent:
     def observe(self, s_old, a, r, s_new):
         raise NotImplementedError("Function need to be implemented by sub class")
 
-    def reset(self):
-        raise NotImplementedError("Function need to be implemented by sub class")
+    def obsend(self):
+        pass
 
 class RandomAgent(Agent):
     def __init__(self, num_act):
@@ -26,8 +27,6 @@ class RandomAgent(Agent):
     def observe(self, s_old, a, r, s_new):
         pass
 
-    def reset(self):
-        pass
 
 class UCB1(Agent):
     def __init__(self, num_act, c=0.2):
@@ -49,8 +48,6 @@ class UCB1(Agent):
         self.T[a] += 1
         self.t += 1
 
-    def reset(self):
-        pass
 
 class Greedy(Agent):
     def __init__(self, num_act, eps=1.0, decay_steps = 10):
@@ -77,13 +74,14 @@ class Greedy(Agent):
         self.T[a] += 1
         self.t += 1
 
-    def reset(self):
-        pass
 
-class QLearning(Agent):
+class TabQLearning(Agent):
     """
     Tabula Q Learning Agent:
-    gamma, discount reward coefficient
+    lr:     learning rate
+    decay_steps,
+    eps:    exploration probability (epsilong greedy)
+    gamma:  reward discount
     """
     def __init__(self, num_state, num_act, lr=0.1, eps=1.0, decay_steps = 10, gamma = 0.95):
         self.num_act = num_act
@@ -107,5 +105,48 @@ class QLearning(Agent):
         self.t += 1
 
 
-    def reset(self):
+class TabPolicyGrad(Agent):
+    """
+    Tabula Policy Gradient Agent (off-policy with importance sampling):
+    lr:     learning rate
+    gamma,  reward discount
+    """
+    def __init__(self, num_state, num_act, lr=0.1, gamma = 0.95):
+        self.num_act = num_act
+
+        # Define Policy
+        self.Pi_coef = torch.ones((num_state,num_act))
+        self.Pi_coef.requires_grad_()
+
+        self.lr = lr
+        self.gamma = gamma
+        self.t = 0
+
+    def act(self, s):
+        eps = self.eps * (self.decay_steps-self.t)/self.decay_steps
+        if random.uniform(0,1) < eps:
+            return random.randint(0,self.num_act-1)
+        else:
+            return self.Q[s,:].argmax()
+
+
+    def observe(self, s_old, a, r, s_new):
+        self.Q[s_old,a] = (1-self.lr)*self.Q[s_old,a] + self.lr*(r+self.gamma*self.Q[s_new,:].max())
+        self.t += 1
+
+    def obsend(self):
         pass
+
+class TabTRPO(Agent):
+    """
+    Tabula TRPO:
+    gamma, discount reward coefficient
+    """
+    pass
+
+class TabPPO(Agent):
+    """
+    Tabula PPO:
+    gamma, discount reward coefficient
+    """
+    pass

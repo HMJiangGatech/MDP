@@ -53,8 +53,10 @@ def buildenv(args):
         agent = Agent.UCB1(env.num_act, args.ucb1_c)
     elif args.Agent == "Greedy":
         agent = Agent.Greedy(env.num_act, args.greedy_eps, args.greedy_decay)
-    elif args.Agent == "QLearning":
-        agent = Agent.QLearning(env.num_state, env.num_act, lr = args.lr, eps = args.greedy_eps, decay_steps = args.greedy_decay, gamma = args.gamma)
+    elif args.Agent == "QL" or args.Agent == "QLearning":
+        agent = Agent.TabQLearning(env.num_state, env.num_act, lr = args.lr, eps = args.greedy_eps, decay_steps = args.greedy_decay, gamma = args.gamma)
+    elif args.Agent == "PG" or args.Agent == "PolicyGrad":
+        agent = Agent.TabPolicyGrad(env.num_state, env.num_act, lr = args.lr, eps = args.greedy_eps, decay_steps = args.greedy_decay, gamma = args.gamma)
     return env, agent
 
 
@@ -64,7 +66,6 @@ def main(args):
     all_rewards = []
     for iter_ep in range(args.N):
         state = env.reset()
-        agent.reset()
         episode_reward = 0
         for iter_step in range(args.max_step):
             action = agent.act(state)
@@ -72,6 +73,7 @@ def main(args):
             episode_reward += reward
             agent.observe(state, action, reward, new_state)
             state = new_state
+        agent.obsend()
         all_reward += episode_reward
         all_rewards += [episode_reward]
     print("Total Reward: \t", all_reward)
